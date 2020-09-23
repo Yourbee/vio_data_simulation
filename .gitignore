@@ -4,3 +4,4 @@ bin/keyframe/
 bin/*.txt
 *~
 *.DS_Store
+.vscode
