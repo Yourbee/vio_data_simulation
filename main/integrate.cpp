@@ -80,63 +80,56 @@ int main(int argc, char* argv[])
     Eigen::Vector3d gw(0, 0, -9.81);    // ENU frame
     
     // 中值积分 
-    // for (int i = 0; i < imudata.size() - 1; ++i) 
-    // { 
-    //     // MotionData imupose = imudata[i]; 
-    //     MotionData imupose = imudata[i]; 
-    //     MotionData imupose_next = imudata[i + 1]; 
+    for (int i = 0; i < imudata.size() - 1; ++i) 
+    { 
+        // MotionData imupose = imudata[i]; 
+        MotionData imupose = imudata[i]; 
+        MotionData imupose_next = imudata[i + 1]; 
 
-    //     //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z] 
-    //     Eigen::Quaterniond dq; 
-    //     Eigen::Vector3d dtheta_half = (imupose.imu_gyro  
-    //         + imupose_next.imu_gyro) / 2.0 * dt / 2.0; 
-    //     dq.w() = 1; 
-    //     dq.x() = dtheta_half.x(); 
-    //     dq.y() = dtheta_half.y(); 
-    //     dq.z() = dtheta_half.z();   
+        //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z] 
+        Eigen::Quaterniond dq; 
+        Eigen::Vector3d dtheta_half = (imupose.imu_gyro + imupose_next.imu_gyro) / 2.0 * dt / 2.0; 
+        dq.w() = 1; 
+        dq.x() = dtheta_half.x(); 
+        dq.y() = dtheta_half.y(); 
+        dq.z() = dtheta_half.z();   
 
-    //     Eigen::Quaterniond Qwb_next = Qwb * dq; 
-    //     Eigen::Vector3d acc_w = 1/2.0 * (Qwb * (imupose.imu_acc)  
-    //     + Qwb_next * (imupose_next.imu_acc)) + gw; 
-    //     Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w; 
-    //     Vw = Vw + acc_w * dt; 
-    //     Qwb = Qwb_next; 
+        Eigen::Quaterniond Qwb_next = Qwb * dq; 
+        Qwb_next.normalize();
+        Eigen::Vector3d acc_w = 1/2.0 * (Qwb * (imupose.imu_acc) + Qwb_next * (imupose_next.imu_acc)) + gw; 
+        Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w; 
+        Vw = Vw + acc_w * dt; 
+        Qwb = Qwb_next; 
     
     // 欧拉积分
-    for (int i = 1; i < imudata.size(); ++i) {
+    // for (int i = 1; i < imudata.size(); ++i) {
 
-        MotionData imupose = imudata[i];
+    //     MotionData imupose = imudata[i];
 
-        //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z]
-        Eigen::Quaterniond dq;
-        Eigen::Vector3d dtheta_half =  imupose.imu_gyro * dt /2.0;
-        dq.w() = 1;
-        dq.x() = dtheta_half.x();
-        dq.y() = dtheta_half.y();
-        dq.z() = dtheta_half.z();
+    //     //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z]
+    //     Eigen::Quaterniond dq;
+    //     Eigen::Vector3d dtheta_half =  imupose.imu_gyro * dt /2.0;
+    //     dq.w() = 1;
+    //     dq.x() = dtheta_half.x();
+    //     dq.y() = dtheta_half.y();
+    //     dq.z() = dtheta_half.z();
 
-        /// imu 动力学模型 欧拉积分
-        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
-        Qwb = Qwb * dq;
-        Vw = Vw + acc_w * dt;
-        Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w;
+    //     /// imu 动力学模型 欧拉积分
+    //     Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
+    //     Qwb = Qwb * dq;
+    //     Qwb.normalize();
+    //     Vw = Vw + acc_w * dt;
+    //     Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w;
 
         //　按着imu postion, imu quaternion , cam postion, cam quaternion 的格式存储，由于没有cam，所以imu存了两次
         save_points<<imupose.timestamp<<" "
-                   <<Qwb.w()<<" "
-                   <<Qwb.x()<<" "
-                   <<Qwb.y()<<" "
-                   <<Qwb.z()<<" "
                    <<Pwb(0)<<" "
                    <<Pwb(1)<<" "
                    <<Pwb(2)<<" "
                    <<Qwb.w()<<" "
                    <<Qwb.x()<<" "
                    <<Qwb.y()<<" "
-                   <<Qwb.z()<<" "
-                   <<Pwb(0)<<" "
-                   <<Pwb(1)<<" "
-                   <<Pwb(2)<<" "
+                   <<Qwb.z()
                    <<std::endl;
 
     }
